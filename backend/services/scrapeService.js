@@ -63,7 +63,7 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
               const companyName = job.company.company;
               const jobRole = job.job_title;
               const deadline = moment(job.closing_date, "YYYY-MM-DD").toDate();
-              const jobLink = `https://technopark.org/job/${job.job_listing_id}`;
+              const jobLink = `https://technopark.org/job-details/${job.id}`;
               const isMatchingJob = fresherKeywords.some((keyword) =>
                 jobRole.toLowerCase().includes(keyword.toLowerCase())
               );
