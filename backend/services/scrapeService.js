@@ -2,6 +2,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const moment = require("moment");
 const https = require("https");
+const cron = require("node-cron");
 
 const fresherKeywords = [
   "fresher",
@@ -62,7 +63,7 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
             jobsData.forEach((job) => {
               const companyName = job.company.company;
               const jobRole = job.job_title;
-              const deadline = moment(job.closing_date, "YYYY-MM-DD").toDate();
+              const deadline = job.closing_date;
               const jobLink = `https://technopark.org/job-details/${job.id}`;
               const isMatchingJob = fresherKeywords.some((keyword) =>
                 jobRole.toLowerCase().includes(keyword.toLowerCase())
