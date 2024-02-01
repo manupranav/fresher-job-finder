@@ -9,10 +9,10 @@ const {
 
 router.get("/", getJobs);
 
-router.post("/", setJobs);
+router.post("/", protect, setJobs);
 
-router.put("/:id", putJobs);
+router.put("/:id", protect, putJobs);
 
-router.delete("/:id", deleteJobs);
+router.delete("/:id", protect, deleteJobs);
 
 module.exports = router;
