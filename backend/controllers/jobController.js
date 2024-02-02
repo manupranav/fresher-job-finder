@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Job = require("../model/jobModel");
 const Webhook = require("../model/notificationModel");
+const User = require("../model/UserModel");
 const scrapeJobData = require("../services/scrapeService");
 const protect = require("../middleware/authMiddleware");
 const cron = require("node-cron");
@@ -93,10 +94,27 @@ const setJobs = asyncHandler(async (req, res) => {
 // @route PUT /api/jobs/:id
 // @access private
 const putJobs = asyncHandler(async (req, res) => {
-  const { jobId, status } = req.body;
+  const job = await Job.findById(req.params.id);
+  const { status } = req.body;
 
   if (!status || ["applied", "not intrested", "pending"].includes(status)) {
     return res.status(400).json({ message: "Invalid status provided." });
+  }
+
+  if (!job) {
+    res.status(400);
+    throw new Error("Job not found");
+  }
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    res.status(401);
+    throw new Error("User not found");
+  }
+
+  if (goal.user.toString() !== user.id) {
+    res.status(401);
+    throw new Error("User not authorized");
   }
   try {
     const job = await Job.findByIdAndUpdate(
