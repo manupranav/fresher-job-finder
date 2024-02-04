@@ -6,14 +6,14 @@ const bodyParser = require("body-parser");
 const http = require("http");
 const connectDB = require("./config/db");
 const colors = require("colors");
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 8081;
 
 connectDB();
 
 const app = express();
 
 const corsOptions = {
-  origin: "http://localhost:3000", // Update with your Angular app's URL
+  origin: ["http://localhost:8082", "http://localhost:8081"], // Update with your Angular app's URL
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   optionsSuccessStatus: 204,
@@ -25,8 +25,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use("/api/jobs", require("./routes/jobRoutes"));
-app.use("/api/user", require("./routes/userRoutes"));
-app.use("/api/notification", require("./routes/notificationRoutes"));
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.listen(port, () => {
   console.log(`Proxy server is running on http://localhost:${port}`);
 });

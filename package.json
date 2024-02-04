@@ -18,15 +18,15 @@
     "react-redux": "^9.1.0",
     "react-router-dom": "^6.22.0",
     "react-scripts": "5.0.1",
+    "react-toastify": "^10.0.4",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "react-scripts start --port 3000",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "nodemon backend/server.js",
-    "client": "npm start"
+    "server": "nodemon backend/server.js"
   },
   "eslintConfig": {
     "extends": [
@@ -47,6 +47,9 @@
     ]
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.17",
+    "concurrently": "^8.2.2",
+    "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1"
   }
 }
