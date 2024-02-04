@@ -1,15 +1,18 @@
-import "./App.css";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import Notification from "./pages/Notification/Notification";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <>
       <Router>
         <div className="App">
+          <Navbar />
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/register" element={<Register />} />
@@ -18,6 +21,7 @@ function App() {
           </Routes>
         </div>
       </Router>
+      <ToastContainer />
     </>
   );
 }
