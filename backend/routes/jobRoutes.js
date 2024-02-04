@@ -7,6 +7,8 @@ const {
   deleteJobs,
 } = require("../controllers/jobController");
 
+const protect = require("../middleware/authMiddleware");
+
 router.get("/", getJobs);
 
 router.post("/", protect, setJobs);
