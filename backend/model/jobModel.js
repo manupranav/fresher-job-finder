@@ -12,7 +12,7 @@ const jobSchema = new mongoose.Schema(
     deadline: { type: String, required: true },
     jobLink: { type: String, required: true },
     status: {
-      type: Strung,
+      type: String,
       default: "pending",
       enum: ["applied", "pending", "not interested"],
     },
