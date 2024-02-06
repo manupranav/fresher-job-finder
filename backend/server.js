@@ -13,7 +13,7 @@ connectDB();
 const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:8082", "http://localhost:8081"], // Update with your Angular app's URL
+  origin: ["http://localhost:8082", "http://localhost:3000"], // Update with your React app's URL
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   optionsSuccessStatus: 204,

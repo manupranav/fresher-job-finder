@@ -1,12 +1,9 @@
 const asyncHandler = require("express-async-handler");
 const Job = require("../model/jobModel");
 const Webhook = require("../model/notificationModel");
-const User = require("../model/UserModel");
 const scrapeJobData = require("../services/scrapeService");
-const protect = require("../middleware/authMiddleware");
 const cron = require("node-cron");
 const axios = require("axios");
-const mongoose = require("mongoose");
 
 // Schedule the setJobs function to run every hour
 cron.schedule("0 * * * *", async () => {
