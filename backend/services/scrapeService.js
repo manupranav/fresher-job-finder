@@ -2,7 +2,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const moment = require("moment");
 const https = require("https");
-const cron = require("node-cron");
+const Webhook = require("../model/notificationModel");
 
 const fresherKeywords = [
   "fresher",
@@ -31,7 +31,16 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
     if (techPark == "Infopark") {
       $(".company-list.joblist").each((index, element) => {
         const companyName = $(element).find(".jobs-comp-name a").text().trim();
-        const jobRole = $(element).find(".mt5 a").text().trim();
+
+        // Find the job role by navigating through the DOM
+        const jobRole = $(element)
+          .find(".mt5 a")
+          .first()
+          .clone() // Clone the anchor element
+          .children() // Select its children (if any)
+          .remove() // Remove the children
+          .end() // Go back to the cloned element
+          .text(); // Get the text content
         const deadline = $(element).find(".job-date").text().trim();
         const jobLink = $(element).find(".mt5 a").attr("href");
 
@@ -102,7 +111,26 @@ const scrapeJobData = async () => {
       "Infopark"
     );
 
-    const jobList = [...jobListTechnopark, ...jobListInfopark];
+    const currentDate = new Date();
+
+    const convertToDDMMYYYY = (date) => {
+      const options = { day: "2-digit", month: "2-digit", year: "numeric" };
+      return new Date(date).toLocaleDateString("en-GB", options);
+    };
+
+    const convertJobList = (jobList) => {
+      return jobList.map((job) => {
+        return {
+          ...job,
+          deadline: convertToDDMMYYYY(job.deadline),
+        };
+      });
+    };
+
+    const jobList = [
+      ...convertJobList(jobListTechnopark),
+      ...convertJobList(jobListInfopark),
+    ];
 
     return jobList;
   } catch (error) {

@@ -48,19 +48,12 @@ const loginUser = asyncHandler(async (req, res) => {
       token: generateJWT(user.id),
     });
   } else {
-    res.status(400);
-    throw new Error("Invalid credentials");
+    return res.status(400).json({ error: "Invalid credentials" });
   }
 });
 
 const getUser = asyncHandler(async (req, res) => {
-  const { _id, name, email } = await User.findById(req.user.id);
-
-  res.status(200).json({
-    id: _id,
-    email,
-    name,
-  });
+  res.status(200).json(req.user);
 });
 
 const generateJWT = (id) => {
