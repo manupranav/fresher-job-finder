@@ -26,7 +26,7 @@ const Navbar = () => {
     <>
       <header className="header">
         <div className="logo">
-          <Link to="/">JobsFinder</Link>
+          <Link to="/">JobFinder</Link>
         </div>
         <ul className="nav-links">
           {user ? (
