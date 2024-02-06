@@ -10,7 +10,11 @@ cron.schedule("0 * * * *", async () => {
   console.log("Running setJobs cron job");
   await setJobsInternal();
 });
-
+// Schedule the function to run every day at midnight
+cron.schedule("0 0 * * *", async () => {
+  console.log("Running deleteExpiredJobs cron job");
+  await deleteExpiredJobs();
+});
 // Function to delete expired jobs
 const deleteExpiredJobs = async () => {
   try {
@@ -36,12 +40,6 @@ const deleteExpiredJobs = async () => {
     console.error("Error deleting expired jobs:", error.message);
   }
 };
-
-// Schedule the function to run every day at midnight (adjust as needed)
-cron.schedule("0 * * * *", async () => {
-  console.log("Running deleteExpiredJobs cron job");
-  await deleteExpiredJobs();
-});
 
 // Function to send notifications for new jobs to all webhooks
 const sendNotificationsForNewJobs = async (newJobList) => {
