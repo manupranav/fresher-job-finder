@@ -1,25 +1,52 @@
+/* Import the Poppins font */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap");
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Reset CSS */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* Body styling */
 body {
   font-family: "Poppins", sans-serif;
   height: 100vh;
 }
-
-a {
-  text-decoration: none;
-  color: #000;
+/* Add a custom scrollbar style if needed */
+body::-webkit-scrollbar {
+  width: 12px;
 }
 
+body::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 6px;
+}
+
+body::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+/* Links styling */
+a {
+  text-decoration: none;
+  color: #333; /* Adjust link color */
+  transition: color 0.3s ease; /* Add smooth transition */
+}
+
+a:hover {
+  color: #777; /* Adjust hover color */
+}
+
+/* Paragraph styling */
 p {
   line-height: 1.7;
 }
 
+/* List styling */
 ul {
   list-style: none;
 }
@@ -28,6 +55,7 @@ li {
   line-height: 2.2;
 }
 
+/* Headings styling */
 h1,
 h2,
 h3 {
@@ -35,6 +63,7 @@ h3 {
   margin-bottom: 10px;
 }
 
+/* Container styling */
 .container {
   width: 100%;
   max-width: 960px;
@@ -43,6 +72,7 @@ h3 {
   text-align: center;
 }
 
+/* Header styling */
 .header {
   display: flex;
   justify-content: space-between;
@@ -52,12 +82,14 @@ h3 {
   margin-bottom: 60px;
 }
 
+/* Header ul styling */
 .header ul {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+/* Header ul li styling */
 .header ul li {
   margin-left: 20px;
 }
@@ -75,28 +107,45 @@ h3 {
   margin-right: 5px;
 }
 
+/* Heading styling */
 .heading {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 50px;
   padding: 0 20px;
+  color: #333; /* Adjust heading color */
 }
 
 .heading p {
   color: #828282;
 }
 
+/* Goals styling */
 .goals {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
+/* Goal styling */
 .goal {
-  background-color: #f4f4f4;
-  margin: 10px 0;
-  padding: 20px 0 10px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 20px 20px;
   position: relative;
+  transition: transform 0.3s ease;
+  max-width: 80%; /* Adjust the percentage based on your layout */
+  overflow: hidden;
+  margin-top: 20px; /* Adjust the margin-top value as needed */
+}
+
+/* Add ellipsis to multiline text */
+.goal h4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Change the number of lines as needed */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .goal .close {
@@ -106,18 +155,39 @@ h3 {
   cursor: pointer;
   border: none;
   background: none;
+  color: #ff4d4f;
+  font-size: 18px;
+  transition: color 0.3s ease;
 }
 
+.logout-btn {
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  appearance: button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.logout-btn > svg {
+  margin-right: 5px; /* Adjust the margin to add space between icon and text */
+}
+/* Form and Content styling */
 .form,
 .content {
   width: 70%;
   margin: 0 auto;
 }
 
+/* Form group styling */
 .form-group {
   margin-bottom: 10px;
 }
 
+/* Form input, textarea, and select styling */
 .form-group input,
 .form-group textarea,
 .form-group select {
@@ -129,17 +199,21 @@ h3 {
   font-family: inherit;
 }
 
+/* Form label styling */
 .form-group label {
   text-align: left;
   display: block;
   margin: 0 0 5px 3px;
 }
 
+/* Logo styling */
 .logo {
   font-size: 1.5rem;
   font-weight: 700;
+  color: #333; /* Adjust logo color */
 }
 
+/* Navigation links styling */
 .nav-links {
   list-style: none;
   display: flex;
@@ -154,18 +228,19 @@ h3 {
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: #000;
+  color: #333; /* Adjust link color */
 }
 
 .nav-links a:hover {
-  color: #777;
+  color: #777; /* Adjust hover color */
 }
 
+/* Button styling */
 .btn {
   padding: 10px 20px;
-  border: 1px solid #000;
+  border: 1px solid #333; /* Adjust border color */
   border-radius: 5px;
-  background: #000;
+  background: #333; /* Adjust background color */
   color: #fff;
   font-size: 16px;
   font-weight: 700;
@@ -175,26 +250,31 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.3s ease, transform 0.3s ease; /* Add smooth transitions */
 }
 
 .btn svg {
   margin-right: 8px;
 }
 
+/* Reverse button styling */
 .btn-reverse {
   background: #fff;
-  color: #000;
+  color: #333; /* Adjust text color */
 }
 
+/* Block button styling */
 .btn-block {
   width: 100%;
   margin-bottom: 20px;
 }
 
+/* Button hover effect */
 .btn:hover {
   transform: scale(0.98);
 }
 
+/* Loading spinner container styling */
 .loadingSpinnerContainer {
   position: fixed;
   top: 0;
@@ -208,15 +288,48 @@ h3 {
   align-items: center;
 }
 
+/* Loading spinner styling */
 .loadingSpinner {
   width: 64px;
   height: 64px;
   border: 8px solid;
-  border-color: #000 transparent #555 transparent;
+  border-color: #333 transparent #555 transparent; /* Adjust border color */
   border-radius: 50%;
   animation: spin 1.2s linear infinite;
 }
 
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 20px; /* Adjust margin for better spacing */
+}
+
+/* Table header styling */
+.table th {
+  background-color: #f4f4f4; /* Adjust header background color */
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd; /* Adjust header border color */
+}
+
+/* Table cell styling */
+.table td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd; /* Adjust cell border color */
+}
+
+/* Style for the "New" indicator */
+.new-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #4caf50; /* Green color for new indicator */
+  border-radius: 50%;
+  margin-left: 5px;
+}
+
+/* Keyframes for spinner rotation */
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -226,6 +339,7 @@ h3 {
   }
 }
 
+/* Responsive styling for smaller screens */
 @media (max-width: 600px) {
   .form {
     width: 90%;
@@ -239,6 +353,3 @@ h3 {
     font-size: 1.5rem;
   }
 }
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
