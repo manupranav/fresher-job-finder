@@ -6,12 +6,82 @@ const scrapeJobData = require("../services/scrapeService");
 const protect = require("../middleware/authMiddleware");
 const cron = require("node-cron");
 const axios = require("axios");
+const mongoose = require("mongoose");
 
 // Schedule the setJobs function to run every hour
 cron.schedule("0 * * * *", async () => {
   console.log("Running setJobs cron job");
   await setJobsInternal();
 });
+
+// Function to delete expired jobs
+const deleteExpiredJobs = async () => {
+  try {
+    const currentDate = new Date();
+    // Find jobs with a deadline earlier than the current date
+    const expiredJobs = await Job.find({}).lean(); // Use lean() to get plain JavaScript objects
+
+    // Filter and map jobs based on deadline
+    const jobsToDelete = expiredJobs.filter((job) => {
+      const [day, month, year] = job.deadline.split("/"); // Split the components
+      const jobDeadline = new Date(`${year}-${month}-${day}`); // Create a Date object in the correct format
+      return jobDeadline < currentDate;
+    });
+
+    // Delete each expired job
+    for (const job of jobsToDelete) {
+      await Job.deleteOne({ _id: job._id });
+      console.log(`Deleted expired job with ID: ${job._id} - ${job.deadline}`);
+    }
+
+    console.log("Expired jobs deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting expired jobs:", error.message);
+  }
+};
+
+// Schedule the function to run every day at midnight (adjust as needed)
+cron.schedule("0 * * * *", async () => {
+  console.log("Running deleteExpiredJobs cron job");
+  await deleteExpiredJobs();
+});
+
+// Function to send notifications for new jobs to all webhooks
+const sendNotificationsForNewJobs = async (newJobList) => {
+  try {
+    const webhookURLs = await Webhook.find({}).distinct("webhookURL");
+
+    const addedJobs = newJobList.filter(
+      (newJob) =>
+        !previousJobList.some((prevJob) => prevJob.jobLink === newJob.jobLink)
+    );
+
+    if (addedJobs.length > 0 && webhookURLs.length > 0) {
+      for (const webhookURL of webhookURLs) {
+        const notificationData = {
+          webhookURL,
+          message: `New jobs added:\n${addedJobs
+            .map((job) => `${job.companyName}: ${job.jobRole}`)
+            .join("\n")}`,
+        };
+
+        try {
+          await axios.post(webhookURL, notificationData);
+          console.log(
+            `Notifications sent for new jobs to ${webhookURL}:`,
+            addedJobs
+          );
+        } catch (error) {
+          console.error(`Error sending notifications to ${webhookURL}:`, error);
+        }
+      }
+    }
+
+    previousJobList = newJobList;
+  } catch (error) {
+    console.error("Error processing notifications:", error);
+  }
+};
 
 // @desc Get jobs
 // @route GET /api/jobs
@@ -60,21 +130,7 @@ const setJobsInternal = async () => {
     const insertedJobs = await Job.insertMany(jobsToInsert);
 
     // Notify interested users for each newly inserted job
-    insertedJobs.forEach(async (job) => {
-      const interestedWebhooks = await Webhook.find({ userId: job.user });
-
-      interestedWebhooks.forEach(async (webhook) => {
-        const notificationMessage = {
-          content: `A new job has been added: ${job.companyName} - ${job.jobRole}`,
-        };
-
-        try {
-          await axios.post(webhook.webhookURL, notificationMessage);
-        } catch (error) {
-          console.error("Error sending Discord notification:", error);
-        }
-      });
-    });
+    await sendNotificationsForNewJobs(insertedJobs);
 
     console.log("Jobs successfully added.");
   } catch (error) {
@@ -105,14 +161,13 @@ const putJobs = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Job not found");
   }
-  const user = await User.findById(req.user.id);
 
-  if (!user) {
+  if (!req.user) {
     res.status(401);
     throw new Error("User not found");
   }
 
-  if (goal.user.toString() !== user.id) {
+  if (job.user.toString() !== req.user.id) {
     res.status(401);
     throw new Error("User not authorized");
   }
