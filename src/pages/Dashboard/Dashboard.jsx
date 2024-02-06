@@ -1,14 +1,26 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import axios from "axios";
 
 const Dashboard = () => {
-  const [jobList, setJobList] = useState();
+  const [jobList, setJobList] = useState([]);
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {}, [user, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get("http://localhost:8081/api/jobs", {});
-        setJobList(response.data);
+
+        // Sort jobs based on createdAt time in descending order
+        const sortedJobs = response.data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        setJobList(sortedJobs);
       } catch (error) {
         console.error("Error fetching job data:", error);
       }
@@ -16,43 +28,86 @@ const Dashboard = () => {
 
     fetchData();
   }, []);
+
+  // Function to check if a job was created in the last 24 hours
+  const isJobNew = (createdAt) => {
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    return new Date(createdAt) > twentyFourHoursAgo;
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      {/* Job Data Table */}
-      <table className="min-w-full bg-white border border-gray-300">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b">Company Name</th>
-            <th className="py-2 px-4 border-b">Job Role</th>
-            <th className="py-2 px-4 border-b">Deadline</th>
-            <th className="py-2 px-4 border-b">Job Link</th>
-            <th className="py-2 px-4 border-b">Tech Park</th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* Loop through your job data to populate the table rows */}
-          {jobList &&
-            jobList.map((job, index) => (
-              <tr key={index}>
-                <td className="py-2 px-4 border-b">{job.companyName}</td>
-                <td className="py-2 px-4 border-b">{job.jobRole}</td>
-                <td className="py-2 px-4 border-b">{job.deadline}</td>
-                <td className="py-2 px-4 border-b">
-                  <a
-                    href={job.jobLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500"
-                  >
-                    View Job
-                  </a>
-                </td>
-                <td className="py-2 px-4 border-b">{job.techPark}</td>
+    <>
+      <div>
+        <section className="heading text-center py-4">
+          <h1 className="text-4xl font-bold uppercase">
+            Welcome,{" "}
+            {user ? (
+              user.name.split(" ")[0]
+            ) : (
+              <span className="text-sm lowercase text-gray-600">
+                Create an account to get instant job notifications.
+              </span>
+            )}
+          </h1>
+
+          <p className="text-gray-600 text-2xl">Job Dashboard</p>
+        </section>
+        <div className="relative overflow-x-auto max-w-screen-md mx-auto lg:max-w-screen-lg mb-4">
+          <table className="w-full text-sm text-left text-gray-700 border rounded-lg overflow-hidden">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+              <tr>
+                <th scope="col" className="px-6 py-3 rounded-tl-lg">
+                  Sl No
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Company Name
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Job Role
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Deadline
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Job Link
+                </th>
+                <th scope="col" className="px-6 py-3 rounded-tr-lg">
+                  Tech Park
+                </th>
               </tr>
-            ))}
-        </tbody>
-      </table>
-    </div>
+            </thead>
+            <tbody>
+              {jobList.map((job, index) => (
+                <tr className="bg-white" key={index}>
+                  <td className="py-2 px-4">{index + 1}</td>
+                  <td className="py-2 px-4">{job.companyName}</td>
+                  <td className="py-2 px-4">
+                    {job.jobRole}{" "}
+                    {isJobNew(job.createdAt) && (
+                      <span className="new-indicator"></span>
+                    )}
+                  </td>
+                  <td className="py-2 px-4">{job.deadline}</td>
+                  <td className="py-2 px-4">
+                    <a
+                      href={job.jobLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 visited:text-gray-500"
+                    >
+                      View Job
+                    </a>
+                  </td>
+                  <td className="py-2 px-4">{job.techPark}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   );
 };
 
