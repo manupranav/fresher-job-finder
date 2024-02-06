@@ -19,7 +19,7 @@ function Register() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
 
@@ -27,12 +27,21 @@ function Register() {
     if (isError) {
       toast.error(message);
     }
-    if (isSuccess || user) {
+    if (isSuccess) {
       navigate("/");
     }
 
     dispatch(reset());
-  }, [user, isError, isSuccess, message, navigate, dispatch]);
+  }, [isError, isSuccess, message, navigate, dispatch]);
+
+  const isEmailValid = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const isFormIncomplete = () => {
+    return !name || !email || !password || !password2;
+  };
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -44,7 +53,11 @@ function Register() {
   const onSubmit = (e) => {
     e.preventDefault();
 
-    if (password !== password2) {
+    if (isFormIncomplete()) {
+      toast.error("Please complete all fields");
+    } else if (!isEmailValid(email)) {
+      toast.error("Invalid email format");
+    } else if (password !== password2) {
       toast.error("Passwords do not match");
     } else {
       const userData = {
@@ -57,71 +70,97 @@ function Register() {
   };
 
   if (isLoading) {
-    return Spinner;
+    return <Spinner />;
   }
   return (
-    <>
-      <section className="heading">
-        <h1>
-          <FaUser /> Register
-        </h1>
-        <p>Please create an account</p>
-      </section>
-
-      <section className="form">
+    <div className="max-w-screen-md mx-auto p-4">
+      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div className="text-center mb-4">
+          <h1 className="text-3xl">
+            <FaUser className="inline-block mb-1" /> Register
+          </h1>
+          <p>Please create an account</p>
+        </div>
         <form onSubmit={onSubmit}>
-          <div className="form-group">
+          <div className="mb-4">
+            <label
+              className="block mb-2 text-sm font-medium text-gray-900"
+              htmlFor="name"
+            >
+              Your name
+            </label>
             <input
               type="text"
-              className="form-control"
               id="name"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="Enter your name"
               name="name"
               value={name}
-              placeholder="Enter your name"
               onChange={onChange}
             />
           </div>
-          <div className="form-group">
+          <div className="mb-4">
+            <label
+              className="block mb-2 text-sm font-medium text-gray-900"
+              htmlFor="email"
+            >
+              Your Email
+            </label>
             <input
               type="email"
-              className="form-control"
-              id="email"
               name="email"
-              value={email}
+              id="email"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Enter your email"
+              value={email}
               onChange={onChange}
             />
           </div>
-          <div className="form-group">
+          <div className="mb-4">
+            <label
+              className="block mb-2 text-sm font-medium text-gray-900"
+              htmlFor="password"
+            >
+              Password
+            </label>
             <input
               type="password"
-              className="form-control"
-              id="password"
               name="password"
-              value={password}
+              id="password"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Enter password"
+              value={password}
               onChange={onChange}
             />
           </div>
-          <div className="form-group">
+          <div className="mb-4">
+            <label
+              className="block mb-2 text-sm font-medium text-gray-900"
+              htmlFor="password2"
+            >
+              Confirm Password
+            </label>
             <input
               type="password"
-              className="form-control"
-              id="password2"
               name="password2"
-              value={password2}
+              id="password2"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Confirm password"
+              value={password2}
               onChange={onChange}
             />
           </div>
-          <div className="form-group">
-            <button type="submit" className="btn btn-block">
+          <div className="mb-4">
+            <button
+              type="submit"
+              className="w-full  justify-center text-white bg-[#050708] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-800 dark:hover:bg-gray-800 me-2 mb-2"
+            >
               Submit
             </button>
           </div>
         </form>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }
 
