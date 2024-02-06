@@ -34,7 +34,7 @@ const Notification = () => {
     return () => {
       dispatch(reset());
     };
-  }, [user, navigate, isError]);
+  }, [user, navigate, isError, dispatch, message]);
 
   const validateWebhookURL = (url) => {
     // Regular expression for validating Discord/Slack webhook URLs
