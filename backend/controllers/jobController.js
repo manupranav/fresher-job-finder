@@ -5,19 +5,20 @@ const scrapeJobData = require("../services/scrapeService");
 const cron = require("node-cron");
 const axios = require("axios");
 
-// Schedule the setJobs function to run every hour
-cron.schedule("* * * * *", async () => {
+// Schedule setJobsInternal to run every hour
+cron.schedule("0 * * * *", async () => {
   console.log("Running setJobs cron job");
   await setJobsInternal();
 });
-// Schedule the function to run every day at midnight
-cron.schedule("* * * * *", async () => {
+
+// Schedule deleteExpiredJobs to run every day at midnight
+cron.schedule("0 0 * * *", async () => {
   console.log("Running deleteExpiredJobs cron job");
   await deleteExpiredJobs();
 });
+
 // Function to delete expired jobs
-// Function to delete expired jobs
-const deleteExpiredJobs = async () => {
+const deleteExpiredJobs = asyncHandler(async (req, res) => {
   try {
     const currentDate = new Date();
     // Find jobs with a deadline earlier than the current date
@@ -30,17 +31,34 @@ const deleteExpiredJobs = async () => {
       return jobDeadline < currentDate;
     });
 
-    // Delete each expired job
-    for (const job of jobsToDelete) {
-      await Job.deleteOne({ _id: job._id });
-      console.log(`Deleted expired job with ID: ${job._id} - ${job.deadline}`);
-    }
+    console.log(`About to delete ${jobsToDelete.length} expired jobs.`);
 
-    console.log("Expired jobs deleted successfully.");
+    if (jobsToDelete.length > 0) {
+      // Delete expired jobs in bulk
+      const deleteResult = await Job.deleteMany({
+        _id: { $in: jobsToDelete.map((job) => job._id) },
+      });
+
+      if (deleteResult.deletedCount === jobsToDelete.length) {
+        console.log("Expired jobs deleted successfully.");
+        return res
+          .status(200)
+          .json({ message: "Expired jobs deleted successfully." });
+      } else {
+        console.warn("Not all jobs were deleted successfully.");
+        return res
+          .status(500)
+          .json({ error: "Not all jobs were deleted successfully." });
+      }
+    } else {
+      console.log("No expired jobs found.");
+      return res.status(404).json({ message: "No expired jobs found." });
+    }
   } catch (error) {
     console.error("Error deleting expired jobs:", error.message);
+    return res.status(500).json({ error: "Internal server error." });
   }
-};
+});
 
 // Function to send notifications for new jobs to all webhooks
 const sendNotificationsForNewJobs = async (jobsToInsert) => {
@@ -48,27 +66,33 @@ const sendNotificationsForNewJobs = async (jobsToInsert) => {
     const webhookURLs = await Webhook.find({}).distinct("webhookURL");
 
     if (jobsToInsert.length > 0 && webhookURLs.length > 0) {
-      for (const webhookURL of webhookURLs) {
-        const notificationData = {
-          webhookURL,
-          message: `New jobs added:\n${jobsToInsert
+      const notificationPromises = webhookURLs.map(async (webhookURL) => {
+        const jsonData = JSON.stringify({
+          content: `New jobs added:\n${jobsToInsert
             .map((job) => `${job.companyName}: ${job.jobRole}`)
             .join("\n")}`,
-        };
+        });
 
         try {
-          await axios.post(webhookURL, notificationData);
-          console.log(
-            `Notifications sent for new jobs to ${webhookURL}:`,
-            jobsToInsert
-          );
+          await axios.post(webhookURL, jsonData, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          console.log(`Notifications sent for new jobs to ${webhookURL}`);
         } catch (error) {
           console.error(
-            `Error sending notifications to ${webhookURL}:`,
-            error.message
+            `Error sending notifications to ${webhookURL}: ${error.message}`
           );
+          throw error; // Rethrow the error to be caught by Promise.all
         }
-      }
+      });
+
+      await Promise.all(notificationPromises);
+
+      console.log("All notifications sent successfully.");
+    } else {
+      console.log("No jobs to notify or no webhook URLs available.");
     }
   } catch (error) {
     console.error("Error processing notifications:", error.message);
@@ -79,109 +103,118 @@ const sendNotificationsForNewJobs = async (jobsToInsert) => {
 // @route GET /api/jobs
 // @access private
 const getJobs = asyncHandler(async (req, res) => {
-  const jobs = await Job.find();
-  res.status(200).json(jobs);
+  try {
+    const jobs = await Job.find();
+    return res.status(200).json(jobs);
+  } catch (error) {
+    console.error("Error getting jobs:", error.message);
+    return res.status(500).json({ error: "Internal server error." });
+  }
 });
 
 // @desc Set jobs by scraping and adding to the database
 // @route POST /api/jobs
 // @access private
-const setJobsInternal = async () => {
+const setJobsInternal = asyncHandler(async () => {
   try {
+    console.log("Running setJobsInternal");
+
     const jobsFromScrape = await scrapeJobData();
 
     // Limit the number of jobs initially
-    const maxJobsToProcess = 50;
+    const maxJobsToProcess = 100;
     const limitedJobs = jobsFromScrape.slice(0, maxJobsToProcess);
 
-    const uniqueJobs = await Promise.all(
-      limitedJobs.map(async (job) => {
-        const existingJob = await Job.findOneAndUpdate(
-          {
-            techPark: job.techPark,
-            companyName: job.companyName,
-            jobRole: job.jobRole,
-            deadline: job.deadline,
-            jobLink: job.jobLink,
-          },
-          { $addToSet: { tags: { $each: job.tags } } }, // Adjust this based on your schema
-          { upsert: true, new: true }
-        );
+    const jobsToInsert = [];
 
-        if (existingJob) {
-          // Job already exists, do not insert it
-          return null;
-        }
+    for (const job of limitedJobs) {
+      const existingJob = await Job.findOne({
+        techPark: job.techPark,
+        companyName: job.companyName,
+        jobRole: job.jobRole,
+        deadline: job.deadline,
+        jobLink: job.jobLink,
+      });
 
-        // Job does not exist, return the job for insertion
-        return job;
-      })
-    );
-
-    // Filter out null values (jobs that already existed)
-    const jobsToInsert = uniqueJobs.filter((job) => job !== null);
-
-    const batchSize = 10;
-    for (let i = 0; i < jobsToInsert.length; i += batchSize) {
-      const batch = jobsToInsert.slice(i, i + batchSize);
-      await Job.insertMany(batch);
+      if (!existingJob) {
+        // Job does not exist, add it to the list for insertion
+        jobsToInsert.push(job);
+      }
     }
 
-    await sendNotificationsForNewJobs(jobsToInsert);
+    if (jobsToInsert.length > 0) {
+      // Batch insert jobs
+      const batchSize = Math.min(50, jobsToInsert.length);
+      for (let i = 0; i < jobsToInsert.length; i += batchSize) {
+        const batch = jobsToInsert.slice(i, i + batchSize);
+        await Job.insertMany(batch);
+      }
 
-    console.log("Jobs successfully added.");
+      // Send notifications for new jobs
+      await sendNotificationsForNewJobs(jobsToInsert);
+
+      console.log(`Successfully added ${jobsToInsert.length} new jobs.`);
+    } else {
+      console.log("No new jobs to add.");
+    }
   } catch (error) {
-    console.error("Error adding jobs:", error);
+    console.error("Error in setJobsInternal:", error);
   }
-};
+});
 
 // @desc Set jobs route
 // @route POST /api/jobs
 // @access private
 const setJobs = asyncHandler(async (req, res) => {
-  await setJobsInternal();
-  res.status(201).json({ message: "Jobs successfully added." });
+  try {
+    await setJobsInternal();
+    return res.status(201).json({ message: "Jobs successfully added." });
+  } catch (error) {
+    console.error("Error setting jobs:", error.message);
+    return res.status(500).json({ error: "Internal server error." });
+  }
 });
 
 // @desc Update jobs by ID
 // @route PUT /api/jobs/:id
 // @access private
 const putJobs = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id);
-  const { status } = req.body;
-
-  if (!status || ["applied", "not intrested", "pending"].includes(status)) {
-    return res.status(400).json({ message: "Invalid status provided." });
-  }
-
-  if (!job) {
-    res.status(400);
-    throw new Error("Job not found");
-  }
-
-  if (!req.user) {
-    res.status(401);
-    throw new Error("User not found");
-  }
-
-  if (job.user.toString() !== req.user.id) {
-    res.status(401);
-    throw new Error("User not authorized");
-  }
   try {
-    const job = await Job.findByIdAndUpdate(
-      jobId,
-      { $set: { status } },
-      { new: true }
-    );
+    const job = await Job.findById(req.params.id);
+    const { status } = req.body;
+
+    if (!status || ["applied", "not interested", "pending"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status provided." });
+    }
 
     if (!job) {
       return res.status(404).json({ message: "Job not found." });
     }
-    res.status(200).json({ message: "Job status updated successfully" });
+
+    if (!req.user) {
+      return res.status(401).json({ message: "User not found." });
+    }
+
+    if (job.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: "User not authorized." });
+    }
+
+    const updatedJob = await Job.findByIdAndUpdate(
+      req.params.id,
+      { $set: { status } },
+      { new: true }
+    );
+
+    if (!updatedJob) {
+      return res.status(404).json({ message: "Job not found." });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Job status updated successfully." });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error." });
+    console.error("Error updating job:", error.message);
+    return res.status(500).json({ error: "Internal server error." });
   }
 });
 
@@ -189,7 +222,13 @@ const putJobs = asyncHandler(async (req, res) => {
 // @route DELETE /api/jobs/:id
 // @access private
 const deleteJobs = asyncHandler(async (req, res) => {
-  res.status(200).json({ message: "Delete jobs." });
+  try {
+    // Add logic to delete jobs by ID
+    return res.status(200).json({ message: "Delete jobs." });
+  } catch (error) {
+    console.error("Error deleting job:", error.message);
+    return res.status(500).json({ error: "Internal server error." });
+  }
 });
 
 module.exports = {
