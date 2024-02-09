@@ -125,22 +125,15 @@ const setJobsInternal = asyncHandler(async () => {
     const maxJobsToProcess = 100;
     const limitedJobs = jobsFromScrape.slice(0, maxJobsToProcess);
 
-    const jobsToInsert = [];
+    const existingJobs = await Job.find({
+      jobLink: { $in: limitedJobs.map((job) => job.jobLink) },
+    });
 
-    for (const job of limitedJobs) {
-      const existingJob = await Job.findOne({
-        techPark: job.techPark,
-        companyName: job.companyName,
-        jobRole: job.jobRole,
-        deadline: job.deadline,
-        jobLink: job.jobLink,
-      });
+    const existingJobLinks = new Set(existingJobs.map((job) => job.jobLink));
 
-      if (!existingJob) {
-        // Job does not exist, add it to the list for insertion
-        jobsToInsert.push(job);
-      }
-    }
+    const jobsToInsert = limitedJobs.filter(
+      (job) => !existingJobLinks.has(job.jobLink)
+    );
 
     if (jobsToInsert.length > 0) {
       // Batch insert jobs
