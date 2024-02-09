@@ -20,12 +20,13 @@ const deleteExpiredJobs = async () => {
   try {
     const currentDate = new Date();
     const batchSize = 100; // Adjust the batch size as needed
-    let skip = 0;
+    let totalDeletedCount = 0;
 
     while (true) {
-      const expiredJobs = await Job.find({})
-        .sort({ deadline: 1 }) // Sorting by deadline may help in batch processing
-        .skip(skip)
+      const expiredJobs = await Job.find({
+        deadline: { $lt: currentDate },
+      })
+        .select("_id")
         .limit(batchSize)
         .lean();
 
@@ -34,30 +35,36 @@ const deleteExpiredJobs = async () => {
         break;
       }
 
-      const jobsToDelete = expiredJobs.filter((job) => {
-        const [day, month, year] = job.deadline.split("/");
-        const jobDeadline = new Date(`${year}-${month}-${day}`);
-        return jobDeadline < currentDate;
+      const jobIdsToDelete = expiredJobs.map((job) => job._id);
+
+      const deleteResult = await Job.deleteMany({
+        _id: { $in: jobIdsToDelete },
       });
 
-      console.log(`About to delete ${jobsToDelete.length} expired jobs.`);
+      totalDeletedCount += deleteResult.deletedCount;
 
-      if (jobsToDelete.length > 0) {
-        const deleteResult = await Job.deleteMany({
-          _id: { $in: jobsToDelete.map((job) => job._id) },
-        });
+      console.log(
+        `Batch: About to delete ${deleteResult.deletedCount} expired jobs.`
+      );
 
-        if (deleteResult.deletedCount === jobsToDelete.length) {
-          console.log("Expired jobs deleted successfully.");
-        } else {
-          console.warn("Not all jobs were deleted successfully.");
-        }
-      } else {
-        console.log("No expired jobs found.");
+      if (deleteResult.deletedCount !== jobIdsToDelete.length) {
+        console.warn(
+          "Not all jobs were deleted successfully in the current batch."
+        );
       }
 
-      skip += batchSize;
+      // Check if the total execution time is approaching the limit
+      if (totalDeletedCount >= 1000) {
+        console.warn(
+          "Total deleted count reached the limit. Exiting to avoid timeout."
+        );
+        break;
+      }
     }
+
+    console.log(
+      `Total: Expired jobs deleted successfully. Total count: ${totalDeletedCount}`
+    );
   } catch (error) {
     console.error("Error deleting expired jobs:", error.message);
   }
