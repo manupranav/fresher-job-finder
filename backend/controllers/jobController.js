@@ -6,12 +6,12 @@ const cron = require("node-cron");
 const axios = require("axios");
 
 // Schedule the setJobs function to run every hour
-cron.schedule("0 * * * *", async () => {
+cron.schedule("*/3 * * * *", async () => {
   console.log("Running setJobs cron job");
   await setJobsInternal();
 });
 // Schedule the function to run every day at midnight
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("*/3 * * * *", async () => {
   console.log("Running deleteExpiredJobs cron job");
   await deleteExpiredJobs();
 });
