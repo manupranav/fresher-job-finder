@@ -16,37 +16,27 @@ cron.schedule("* * * * *", async () => {
   await deleteExpiredJobs();
 });
 // Function to delete expired jobs
+// Function to delete expired jobs
 const deleteExpiredJobs = async () => {
   try {
     const currentDate = new Date();
-    const batchSize = 100; // Adjust the batch size as needed
-    let totalDeletedCount = 0;
+    // Find jobs with a deadline earlier than the current date
+    const expiredJobs = await Job.find({}).lean(); // Use lean() to get plain JavaScript objects
 
-    while (true) {
-      const expiredJobs = await Job.find({
-        deadline: { $lt: currentDate },
-      })
-        .select("_id")
-        .limit(batchSize)
-        .lean();
+    // Filter and map jobs based on deadline
+    const jobsToDelete = expiredJobs.filter((job) => {
+      const [day, month, year] = job.deadline.split("/"); // Split the components
+      const jobDeadline = new Date(`${year}-${month}-${day}`); // Create a Date object in the correct format
+      return jobDeadline < currentDate;
+    });
 
-      if (expiredJobs.length === 0) {
-        // No more jobs to process
-        break;
-      }
-
-      const jobIdsToDelete = expiredJobs.map((job) => job._id);
-
-      const deleteResult = await Job.deleteMany({
-        _id: { $in: jobIdsToDelete },
-      });
-
-      if (deleteResult.deletedCount !== jobIdsToDelete.length) {
-        console.warn(
-          "Not all jobs were deleted successfully in the current batch."
-        );
-      }
+    // Delete each expired job
+    for (const job of jobsToDelete) {
+      await Job.deleteOne({ _id: job._id });
+      console.log(`Deleted expired job with ID: ${job._id} - ${job.deadline}`);
     }
+
+    console.log("Expired jobs deleted successfully.");
   } catch (error) {
     console.error("Error deleting expired jobs:", error.message);
   }
