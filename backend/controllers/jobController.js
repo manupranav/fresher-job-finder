@@ -19,31 +19,44 @@ cron.schedule("* * * * *", async () => {
 const deleteExpiredJobs = async () => {
   try {
     const currentDate = new Date();
-    // Find jobs with a deadline earlier than the current date
-    const expiredJobs = await Job.find({}).lean(); // Use lean() to get plain JavaScript objects
+    const batchSize = 100; // Adjust the batch size as needed
+    let skip = 0;
 
-    // Filter and map jobs based on deadline
-    const jobsToDelete = expiredJobs.filter((job) => {
-      const [day, month, year] = job.deadline.split("/"); // Split the components
-      const jobDeadline = new Date(`${year}-${month}-${day}`); // Create a Date object in the correct format
-      return jobDeadline < currentDate;
-    });
+    while (true) {
+      const expiredJobs = await Job.find({})
+        .sort({ deadline: 1 }) // Sorting by deadline may help in batch processing
+        .skip(skip)
+        .limit(batchSize)
+        .lean();
 
-    console.log(`About to delete ${jobsToDelete.length} expired jobs.`);
+      if (expiredJobs.length === 0) {
+        // No more jobs to process
+        break;
+      }
 
-    if (jobsToDelete.length > 0) {
-      // Delete expired jobs in bulk
-      const deleteResult = await Job.deleteMany({
-        _id: { $in: jobsToDelete.map((job) => job._id) },
+      const jobsToDelete = expiredJobs.filter((job) => {
+        const [day, month, year] = job.deadline.split("/");
+        const jobDeadline = new Date(`${year}-${month}-${day}`);
+        return jobDeadline < currentDate;
       });
 
-      if (deleteResult.deletedCount === jobsToDelete.length) {
-        console.log("Expired jobs deleted successfully.");
+      console.log(`About to delete ${jobsToDelete.length} expired jobs.`);
+
+      if (jobsToDelete.length > 0) {
+        const deleteResult = await Job.deleteMany({
+          _id: { $in: jobsToDelete.map((job) => job._id) },
+        });
+
+        if (deleteResult.deletedCount === jobsToDelete.length) {
+          console.log("Expired jobs deleted successfully.");
+        } else {
+          console.warn("Not all jobs were deleted successfully.");
+        }
       } else {
-        console.warn("Not all jobs were deleted successfully.");
+        console.log("No expired jobs found.");
       }
-    } else {
-      console.log("No expired jobs found.");
+
+      skip += batchSize;
     }
   } catch (error) {
     console.error("Error deleting expired jobs:", error.message);
