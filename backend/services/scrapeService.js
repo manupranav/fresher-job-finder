@@ -18,7 +18,6 @@ const fresherKeywords = [
   "rookie",
   "starter",
 ];
-
 const scrapeJobsFromSource = async (sourceUrl, techPark) => {
   try {
     const response = await axios.get(sourceUrl, {
@@ -28,68 +27,63 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
     const jobList = [];
     const $ = cheerio.load(response.data);
 
-    if (techPark == "Infopark") {
-      $(".company-list.joblist").each((index, element) => {
-        const companyName = $(element).find(".jobs-comp-name a").text().trim();
+    if (techPark === "Infopark") {
+      jobList.push(
+        ...$(".company-list.joblist")
+          .map((index, element) => {
+            const companyName = $(element)
+              .find(".jobs-comp-name a")
+              .text()
+              .trim();
+            const jobRole = $(element)
+              .find(".mt5 a")
+              .first()
+              .clone()
+              .children()
+              .remove()
+              .end()
+              .text();
+            const deadline = $(element).find(".job-date").text().trim();
+            const jobLink = $(element).find(".mt5 a").attr("href");
 
-        // Find the job role by navigating through the DOM
-        const jobRole = $(element)
-          .find(".mt5 a")
-          .first()
-          .clone() // Clone the anchor element
-          .children() // Select its children (if any)
-          .remove() // Remove the children
-          .end() // Go back to the cloned element
-          .text(); // Get the text content
-        const deadline = $(element).find(".job-date").text().trim();
-        const jobLink = $(element).find(".mt5 a").attr("href");
+            const isMatchingJob = fresherKeywords.some((keyword) =>
+              jobRole.toLowerCase().includes(keyword.toLowerCase())
+            );
 
-        const isMatchingJob = fresherKeywords.some((keyword) =>
-          jobRole.toLowerCase().includes(keyword.toLowerCase())
-        );
-
-        if (isMatchingJob) {
-          jobList.push({
-            companyName,
-            jobRole,
-            deadline,
-            jobLink,
-            techPark,
-          });
-        }
-      });
+            return isMatchingJob
+              ? { companyName, jobRole, deadline, jobLink, techPark }
+              : null;
+          })
+          .get()
+          .filter(Boolean)
+      );
     } else {
       if (response.data && response.data.last_page) {
         const totalPages = response.data.last_page;
-        for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
-          const apiUrl = `https://technopark.org/api/paginated-jobs?page=${currentPage}`;
+        const pageRequests = Array.from({ length: totalPages }, (_, i) =>
+          axios.get(`https://technopark.org/api/paginated-jobs?page=${i + 1}`)
+        );
 
-          const pageResponse = await axios.get(apiUrl);
+        const pageResponses = await Promise.all(pageRequests);
+        const jobsData = pageResponses.map((res) => res.data.data).flat();
 
-          if (pageResponse.data && pageResponse.data.data) {
-            const jobsData = pageResponse.data.data;
-
-            jobsData.forEach((job) => {
-              const companyName = job.company.company;
+        jobList.push(
+          ...jobsData
+            .filter((job) => {
               const jobRole = job.job_title;
-              const deadline = job.closing_date;
-              const jobLink = `https://technopark.org/job-details/${job.id}`;
               const isMatchingJob = fresherKeywords.some((keyword) =>
                 jobRole.toLowerCase().includes(keyword.toLowerCase())
               );
-
-              if (isMatchingJob) {
-                jobList.push({
-                  companyName,
-                  jobRole,
-                  deadline,
-                  jobLink,
-                  techPark,
-                });
-              }
-            });
-          }
-        }
+              return isMatchingJob;
+            })
+            .map((job) => ({
+              companyName: job.company.company,
+              jobRole: job.job_title,
+              deadline: job.closing_date,
+              jobLink: `https://technopark.org/job-details/${job.id}`,
+              techPark,
+            }))
+        );
       }
     }
 
@@ -101,15 +95,16 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
 
 const scrapeJobData = async () => {
   try {
-    const jobListTechnopark = await scrapeJobsFromSource(
-      "https://technopark.org/api/paginated-jobs",
-      "Technopark"
-    );
-
-    const jobListInfopark = await scrapeJobsFromSource(
-      "https://infopark.in/companies/job-search",
-      "Infopark"
-    );
+    const [jobListTechnopark, jobListInfopark] = await Promise.all([
+      scrapeJobsFromSource(
+        "https://technopark.org/api/paginated-jobs",
+        "Technopark"
+      ),
+      scrapeJobsFromSource(
+        "https://infopark.in/companies/job-search",
+        "Infopark"
+      ),
+    ]);
 
     const currentDate = new Date();
 
@@ -119,12 +114,10 @@ const scrapeJobData = async () => {
     };
 
     const convertJobList = (jobList) => {
-      return jobList.map((job) => {
-        return {
-          ...job,
-          deadline: convertToDDMMYYYY(job.deadline),
-        };
-      });
+      return jobList.map((job) => ({
+        ...job,
+        deadline: convertToDDMMYYYY(job.deadline),
+      }));
     };
 
     const jobList = [

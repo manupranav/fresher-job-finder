@@ -91,11 +91,14 @@ const getJobs = asyncHandler(async (req, res) => {
 // @access private
 const setJobsInternal = async () => {
   try {
-    // Scrape job data
     const jobsFromScrape = await scrapeJobData();
+
+    // Limit the number of jobs initially
+    const maxJobsToProcess = 50;
+    const limitedJobs = jobsFromScrape.slice(0, maxJobsToProcess);
+
     const uniqueJobs = await Promise.all(
-      jobsFromScrape.map(async (job) => {
-        // Check if a job with the same criteria already exists in the database
+      limitedJobs.map(async (job) => {
         const existingJob = await Job.findOneAndUpdate(
           {
             techPark: job.techPark,
@@ -121,11 +124,13 @@ const setJobsInternal = async () => {
     // Filter out null values (jobs that already existed)
     const jobsToInsert = uniqueJobs.filter((job) => job !== null);
 
-    // Insert scraped jobs into the database
-    const insertedJobs = await Job.insertMany(jobsToInsert);
+    const batchSize = 10;
+    for (let i = 0; i < jobsToInsert.length; i += batchSize) {
+      const batch = jobsToInsert.slice(i, i + batchSize);
+      await Job.insertMany(batch);
+    }
 
-    // Notify interested users for each newly inserted job
-    await sendNotificationsForNewJobs(insertedJobs);
+    await sendNotificationsForNewJobs(jobsToInsert);
 
     console.log("Jobs successfully added.");
   } catch (error) {
