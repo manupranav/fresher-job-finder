@@ -29,17 +29,27 @@ const deleteExpiredJobs = async () => {
       return jobDeadline < currentDate;
     });
 
-    // Delete each expired job
-    for (const job of jobsToDelete) {
-      await Job.deleteOne({ _id: job._id });
-      console.log(`Deleted expired job with ID: ${job._id} - ${job.deadline}`);
-    }
+    console.log(`About to delete ${jobsToDelete.length} expired jobs.`);
 
-    console.log("Expired jobs deleted successfully.");
+    if (jobsToDelete.length > 0) {
+      // Delete expired jobs in bulk
+      const deleteResult = await Job.deleteMany({
+        _id: { $in: jobsToDelete.map((job) => job._id) },
+      });
+
+      if (deleteResult.deletedCount === jobsToDelete.length) {
+        console.log("Expired jobs deleted successfully.");
+      } else {
+        console.warn("Not all jobs were deleted successfully.");
+      }
+    } else {
+      console.log("No expired jobs found.");
+    }
   } catch (error) {
     console.error("Error deleting expired jobs:", error.message);
   }
 };
+let previousJobList = [];
 
 // Function to send notifications for new jobs to all webhooks
 const sendNotificationsForNewJobs = async (newJobList) => {
@@ -67,14 +77,17 @@ const sendNotificationsForNewJobs = async (newJobList) => {
             addedJobs
           );
         } catch (error) {
-          console.error(`Error sending notifications to ${webhookURL}:`, error);
+          console.error(
+            `Error sending notifications to ${webhookURL}:`,
+            error.message
+          );
         }
       }
     }
 
     previousJobList = newJobList;
   } catch (error) {
-    console.error("Error processing notifications:", error);
+    console.error("Error processing notifications:", error.message);
   }
 };
 
