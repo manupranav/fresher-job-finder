@@ -6,12 +6,12 @@ const cron = require("node-cron");
 const axios = require("axios");
 
 // Schedule the setJobs function to run every hour
-cron.schedule("*/3 * * * *", async () => {
+cron.schedule("* * * * *", async () => {
   console.log("Running setJobs cron job");
   await setJobsInternal();
 });
 // Schedule the function to run every day at midnight
-cron.schedule("*/3 * * * *", async () => {
+cron.schedule("* * * * *", async () => {
   console.log("Running deleteExpiredJobs cron job");
   await deleteExpiredJobs();
 });
@@ -49,23 +49,17 @@ const deleteExpiredJobs = async () => {
     console.error("Error deleting expired jobs:", error.message);
   }
 };
-let previousJobList = [];
 
 // Function to send notifications for new jobs to all webhooks
-const sendNotificationsForNewJobs = async (newJobList) => {
+const sendNotificationsForNewJobs = async (jobsToInsert) => {
   try {
     const webhookURLs = await Webhook.find({}).distinct("webhookURL");
 
-    const addedJobs = newJobList.filter(
-      (newJob) =>
-        !previousJobList.some((prevJob) => prevJob.jobLink === newJob.jobLink)
-    );
-
-    if (addedJobs.length > 0 && webhookURLs.length > 0) {
+    if (jobsToInsert.length > 0 && webhookURLs.length > 0) {
       for (const webhookURL of webhookURLs) {
         const notificationData = {
           webhookURL,
-          message: `New jobs added:\n${addedJobs
+          message: `New jobs added:\n${jobsToInsert
             .map((job) => `${job.companyName}: ${job.jobRole}`)
             .join("\n")}`,
         };
@@ -74,7 +68,7 @@ const sendNotificationsForNewJobs = async (newJobList) => {
           await axios.post(webhookURL, notificationData);
           console.log(
             `Notifications sent for new jobs to ${webhookURL}:`,
-            addedJobs
+            jobsToInsert
           );
         } catch (error) {
           console.error(
@@ -84,8 +78,6 @@ const sendNotificationsForNewJobs = async (newJobList) => {
         }
       }
     }
-
-    previousJobList = newJobList;
   } catch (error) {
     console.error("Error processing notifications:", error.message);
   }
@@ -213,4 +205,5 @@ module.exports = {
   setJobs,
   putJobs,
   deleteJobs,
+  deleteExpiredJobs,
 };
