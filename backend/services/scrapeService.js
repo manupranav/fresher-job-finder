@@ -116,10 +116,12 @@ const scrapeJobData = async () => {
     };
 
     const convertJobList = (jobList) => {
-      return jobList.map((job) => ({
-        ...job,
-        deadline: convertToDDMMYYYY(job.deadline),
-      }));
+      return jobList
+        .filter((job) => !job.companyName.toLowerCase().includes("galtech"))
+        .map((job) => ({
+          ...job,
+          deadline: convertToDDMMYYYY(job.deadline),
+        }));
     };
 
     const jobList = [
