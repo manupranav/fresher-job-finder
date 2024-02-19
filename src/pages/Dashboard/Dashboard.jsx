@@ -94,7 +94,7 @@ const Dashboard = () => {
                   <td className="py-2 px-4">{job.companyName}</td>
                   <td className="py-2 px-4">
                     {job.jobRole}{" "}
-                    {getToday() == job.deadline ? (
+                    {getToday() === job.deadline ? (
                       <span
                         className="new-indicator"
                         style={{
