@@ -13,7 +13,10 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/api/jobs", {});
+        const response = await axios.get(
+          "https://fresher-job-finder.vercel.app/api/jobs",
+          {}
+        );
 
         // Sort jobs based on createdAt time in descending order
         const sortedJobs = response.data.sort(
@@ -35,6 +38,12 @@ const Dashboard = () => {
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
     return new Date(createdAt) > twentyFourHoursAgo;
+  };
+
+  const getToday = () => {
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString("en-GB");
+    return formattedDate;
   };
 
   return (
@@ -85,9 +94,31 @@ const Dashboard = () => {
                   <td className="py-2 px-4">{job.companyName}</td>
                   <td className="py-2 px-4">
                     {job.jobRole}{" "}
-                    {isJobNew(job.createdAt) && (
-                      <span className="new-indicator"></span>
-                    )}
+                    {getToday() == job.deadline ? (
+                      <span
+                        className="new-indicator"
+                        style={{
+                          background: "red",
+                          borderRadius: "50%",
+                          display: "inline-block",
+                          width: "8px",
+                          height: "8px",
+                          marginLeft: "5px",
+                        }}
+                      ></span>
+                    ) : isJobNew(job.createdAt) ? (
+                      <span
+                        className="new-indicator"
+                        style={{
+                          background: "green",
+                          borderRadius: "50%",
+                          display: "inline-block",
+                          width: "8px",
+                          height: "8px",
+                          marginLeft: "5px",
+                        }}
+                      ></span>
+                    ) : null}
                   </td>
                   <td className="py-2 px-4">{job.deadline}</td>
                   <td className="py-2 px-4">
