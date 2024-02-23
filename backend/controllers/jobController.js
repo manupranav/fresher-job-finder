@@ -69,7 +69,9 @@ const sendNotificationsForNewJobs = async (jobsToInsert) => {
       const notificationPromises = webhookURLs.map(async (webhookURL) => {
         const jsonData = JSON.stringify({
           content: `New jobs added:\n${jobsToInsert
-            .map((job) => `${job.companyName}: ${job.jobRole}`)
+            .map(
+              (job) => `[${job.companyName}: ${job.jobRole}](${job.jobLink})`
+            )
             .join("\n")}`,
         });
 
