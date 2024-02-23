@@ -36,7 +36,7 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
     if (techPark === "Infopark") {
       jobList.push(
         ...$(".company-list.joblist")
-          .map((element) => {
+          .map((index, element) => {
             const companyName = $(element)
               .find(".jobs-comp-name a")
               .text()
