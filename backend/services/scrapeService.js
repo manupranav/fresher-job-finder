@@ -19,6 +19,10 @@ const fresherKeywords = [
   "starter",
   "6 month",
   "entry level",
+  "l1",
+  "l 1",
+  "0-",
+  "0 -",
 ];
 const scrapeJobsFromSource = async (sourceUrl, techPark) => {
   try {
