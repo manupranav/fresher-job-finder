@@ -1,8 +1,6 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const moment = require("moment");
 const https = require("https");
-const Webhook = require("../model/notificationModel");
 
 const fresherKeywords = [
   "l1",
@@ -38,7 +36,7 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
     if (techPark === "Infopark") {
       jobList.push(
         ...$(".company-list.joblist")
-          .map((index, element) => {
+          .map((element) => {
             const companyName = $(element)
               .find(".jobs-comp-name a")
               .text()
@@ -113,8 +111,6 @@ const scrapeJobData = async () => {
         "Infopark"
       ),
     ]);
-
-    const currentDate = new Date();
 
     const convertToDDMMYYYY = (date) => {
       const options = { day: "2-digit", month: "2-digit", year: "numeric" };
