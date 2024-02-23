@@ -5,6 +5,12 @@ const https = require("https");
 const Webhook = require("../model/notificationModel");
 
 const fresherKeywords = [
+  "l1",
+  "l 1",
+  " 0-",
+  " 0 -",
+  "(0-",
+  "(0 -",
   "fresher",
   "trainee",
   "intern",
@@ -19,10 +25,6 @@ const fresherKeywords = [
   "starter",
   "6 month",
   "entry level",
-  "l1",
-  "l 1",
-  "0-",
-  "0 -",
 ];
 const scrapeJobsFromSource = async (sourceUrl, techPark) => {
   try {
