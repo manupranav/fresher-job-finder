@@ -216,10 +216,49 @@ const putJobs = asyncHandler(async (req, res) => {
 // @access private
 const deleteJobs = asyncHandler(async (req, res) => {
   try {
-    // Add logic to delete jobs by ID
-    return res.status(200).json({ message: "Delete jobs." });
+    const jobsFromScrape = await scrapeJobData();
+    const existingJobs = await Job.find();
+
+    const scrapeData = jobsFromScrape.map((job) => ({
+      title: job.jobRole,
+      link: job.jobLink.trim(),
+    }));
+
+    const existingJobData = existingJobs.map((job) => ({
+      title: job.jobRole,
+      link: job.jobLink.trim(),
+    }));
+
+    const jobNotInScrape = existingJobData.filter((existingJob) => {
+      return !scrapeData.some((scrapeJob) => {
+        return (
+          scrapeJob.title === existingJob.title &&
+          scrapeJob.link === existingJob.link
+        );
+      });
+    });
+
+    const jobsToDelete = jobNotInScrape.filter((job) => {
+      return !job.link.includes("technopark");
+    });
+
+    console.log("Jobs to delete:", jobsToDelete);
+
+    // Delete jobs from the database
+    if (jobsToDelete.length > 0) {
+      for (const job of jobsToDelete) {
+        await Job.deleteOne({
+          jobRole: job.title,
+          jobLink: job.link,
+        });
+      }
+
+      return res.status(200).json({ message: "Jobs successfully deleted" });
+    } else {
+      return res.status(200).json({ message: "No jobs to delete" });
+    }
   } catch (error) {
-    console.error("Error deleting job:", error.message);
+    console.error("Error deleting jobs:", error.message);
     return res.status(500).json({ error: "Internal server error." });
   }
 });

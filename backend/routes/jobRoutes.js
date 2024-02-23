@@ -18,6 +18,6 @@ router.put("/:id", protect, putJobs);
 
 router.delete("/", deleteExpiredJobs);
 
-router.delete("/:id", protect, deleteJobs);
+router.delete("/delete", deleteJobs);
 
 module.exports = router;
