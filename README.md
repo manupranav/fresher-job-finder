@@ -53,6 +53,26 @@
 [![fresher-job-finder Preview][product-preview]](https://github.com/manupranav/fresher-job-finder/blob/main/media/preview.png)
 [![fresher-job-finder Demo][product-video]](https://github.com/manupranav/fresher-job-finder/blob/main/media/demo.gif)
 
+<!-- Getting Started -->
+
+## Getting Started
+
+### Step 1: Create a Discord Server
+
+1. If you don't have a server, create one on Discord. [Learn how to create a server](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server).
+
+### Step 2: Create a Discord Webhook
+
+1. If you don't have a webhook, create one on Discord. [Learn how to create a webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks).
+
+### Step 3: Configure Webhook in JobFinder
+
+1. Create an account on the [JobFinder website](https://freshers-jobfinder.netlify.app).
+2. Log in to your JobFinder account.
+3. Add the Discord webhook URL to receive job notifications.
+
+<!-- Built With -->
+
 ## Built With
 
 - [![React][react.js]][react-url]
@@ -60,9 +80,9 @@
 - [![MONGODB][mongodb.com]][mongodb-url]
 - [![NodeJS][nodejs.com]][nodejs-url]
 
-<!-- GETTING STARTED -->
+<!-- Installation -->
 
-## Getting Started
+## Installation
 
 ```bash
 # Clone this repository
@@ -90,7 +110,7 @@ $ npm start
 ## Link
 
 - GitHub Link: [GitHub](https://github.com/manupranav/fresher-job-finder)
-- Live Site Link: [fresher-job-finder](https://freshers-jobfinder.netlify.app/)
+- Live Site Link: [JobFinder](https://freshers-jobfinder.netlify.app)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
