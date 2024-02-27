@@ -50,6 +50,9 @@
 
 # Overview
 
+ <p>🟢 Green dot indicates that jobs are added within the 24 hours. </p>
+  <p>🔴 Red dot indicates that jobs are going to expire in 24 hours. </p>
+
 [![fresher-job-finder Preview][product-preview]](https://github.com/manupranav/fresher-job-finder/blob/main/media/preview.png)
 [![fresher-job-finder Demo][product-video]](https://github.com/manupranav/fresher-job-finder/blob/main/media/demo.gif)
 
