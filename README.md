@@ -58,7 +58,7 @@
 
 <!-- Getting Started -->
 
-## Getting Started
+## How to get started: 
 
 ### Step 1: Create a Discord Server
 
