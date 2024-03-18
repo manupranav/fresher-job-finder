@@ -53,7 +53,7 @@ const Dashboard = () => {
           <h1 className="font-semibold">
             Welcome,{" "}
             {user ? (
-              user.name.split(" ")[0]
+              user.name.split(" ")[0].toLowerCase()
             ) : (
               <span className="text-sm lowercase text-gray-600">
                 Create an account to get instant job notifications.
@@ -89,7 +89,7 @@ const Dashboard = () => {
             </thead>
             <tbody>
               {jobList.map((job, index) => (
-                <tr className="bg-white" key={index}>
+                <tr className="bg-white" key={job.id}>
                   <td className="py-2 px-4">{index + 1}</td>
                   <td className="py-2 px-4">{job.companyName}</td>
                   <td className="py-2 px-4">
