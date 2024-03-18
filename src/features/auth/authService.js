@@ -1,6 +1,6 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:8081/api/users";
+//api url
+const API_URL = "https://fresher-job-finder.vercel.app/api/users";
 
 const register = async (userData) => {
   const response = await axios.post(API_URL, userData);
