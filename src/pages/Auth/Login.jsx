@@ -78,7 +78,7 @@ function Login() {
   }
 
   return (
-    <div className="max-w-screen-md mx-auto p-4">
+    <div className="max-w-screen-md mx-auto">
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         <div className="text-center mb-4">
           <h1 className="text-3xl">
