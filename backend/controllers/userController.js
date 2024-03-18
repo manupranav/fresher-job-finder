@@ -27,17 +27,15 @@ const registerUser = asyncHandler(async (req, res) => {
     password: hashedPassword,
   });
 
-  if (user) {
-    res.status(201).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      token: generateJWT(user.id),
-    });
-  } else {
-    res.status(400);
-    throw new Error("Invalid user data");
-  }
+  // Generate JWT token
+  const token = generateJWT(user.id);
+
+  res.status(201).json({
+    _id: user.id,
+    name: user.name,
+    email: user.email,
+    token,
+  });
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -46,19 +44,23 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await bcrypt.compare(password, user.password))) {
+    // Generate JWT token
+    const token = generateJWT(user.id);
+
     res.json({
       _id: user.id,
       name: user.name,
       email: user.email,
-      token: generateJWT(user.id),
+      token,
     });
   } else {
-    return res.status(400).json({ error: "Invalid credentials" });
+    res.status(401);
+    throw new Error("Invalid email or password");
   }
 });
 
 const getUser = asyncHandler(async (req, res) => {
-  res.status(200).json(req.user);
+  res.json(req.user);
 });
 
 const generateJWT = (id) => {
