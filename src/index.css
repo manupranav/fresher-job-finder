@@ -161,14 +161,8 @@ h3 {
 }
 
 .logout-btn {
-  border-radius: 5px;
-  cursor: pointer;
-  text-align: center;
-  appearance: button;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease;
 }
 
 .logout-btn > svg {
