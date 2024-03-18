@@ -50,7 +50,7 @@ const Dashboard = () => {
     <>
       <div>
         <section className="heading text-center py-4">
-          <h1 className="text-4xl font-bold uppercase">
+          <h1 className="font-semibold">
             Welcome,{" "}
             {user ? (
               user.name.split(" ")[0]
@@ -126,7 +126,7 @@ const Dashboard = () => {
                       href={job.jobLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-500 visited:text-gray-500"
+                      className="text-blue-700 visited:text-gray-700 hover:underline focus:underline"
                     >
                       View Job
                     </a>
