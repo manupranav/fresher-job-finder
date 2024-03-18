@@ -1,15 +1,15 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8081/api/notifications/";
+const API_URL = "https://fresher-job-finder.vercel.app/api/notifications/";
 
-const createNotification = async (norificationData, token) => {
+const createNotification = async (notificationData, token) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
 
-  const response = await axios.post(API_URL, norificationData, config);
+  const response = await axios.post(API_URL, notificationData, config);
 
   return response.data;
 };
