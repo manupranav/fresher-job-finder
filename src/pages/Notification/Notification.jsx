@@ -84,8 +84,8 @@ const Notification = () => {
             <FaArrowLeft />
           </button>
           <div className="text-center">
-            <h1 className="text-3xl">Notification</h1>
-            <p>Manage your notifications</p>
+            <h1 className="text-3xl">Webhooks</h1>
+            <p>Manage your webhooks</p>
           </div>
           <div></div>
         </div>

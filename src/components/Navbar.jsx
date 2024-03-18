@@ -38,7 +38,7 @@ const Navbar = () => {
                   </Link>
                 ) : (
                   <Link to="/notification">
-                    <FaBell /> Notifications
+                    <FaBell /> Webhooks
                   </Link>
                 )}
               </li>

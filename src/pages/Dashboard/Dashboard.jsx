@@ -49,7 +49,7 @@ const Dashboard = () => {
   return (
     <>
       <div>
-        <section className="heading text-center py-4">
+        <section className="heading text-center">
           <h1 className="font-semibold">
             Welcome,{" "}
             {user ? (
