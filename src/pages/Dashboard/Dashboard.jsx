@@ -64,20 +64,22 @@ const Dashboard = () => {
           {user ? (
             user.name.split(" ")[0].toLowerCase()
           ) : (
-            <span className="text-sm lowercase text-gray-600">
+            <span className="text-sm lowercase text-gray-700">
               Create an account to get instant job notifications.
             </span>
           )}
         </h1>
-        <p className="text-gray-700 text-2xl font-semibold mt-7">
-          JOB DASHBOARD
-        </p>
+        <h2 className="text-gray-700 text-2xl mt-7 ">JOB DASHBOARD</h2>
       </header>
 
       <div className="bg-white border p-3 rounded-lg shadow-lg">
         {/* Search Bar */}
+        <label htmlFor="search" className="sr-only">
+          Search:
+        </label>
         <input
           type="text"
+          id="search"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by company name, job role, or techpark"
