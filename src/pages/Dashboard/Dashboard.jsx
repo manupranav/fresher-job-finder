@@ -67,7 +67,7 @@ const Dashboard = () => {
             <div>
               <span className="text-sm text-gray-700">
                 Create an account to get instant job notifications. Contribute
-                here at{" "}
+                at{" "}
               </span>
               <span className="">
                 <a
@@ -75,7 +75,6 @@ const Dashboard = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sky-800 text-lg hover:underline visited:text-purple-700 focus:underline font-semibold"
-                  // Adjusted font size, color, and font weight for GitHub link
                 >
                   GitHub
                 </a>
