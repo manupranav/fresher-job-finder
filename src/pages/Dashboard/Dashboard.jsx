@@ -64,12 +64,26 @@ const Dashboard = () => {
           {user ? (
             user.name.split(" ")[0].toLowerCase()
           ) : (
-            <span className="text-sm lowercase text-gray-700">
-              Create an account to get instant job notifications.
-            </span>
+            <div>
+              <span className="text-sm text-gray-700">
+                Create an account to get instant job notifications. Contribute
+                here at{" "}
+              </span>
+              <span className="">
+                <a
+                  href="https://github.com/manupranav/fresher-job-finder"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-800 text-lg hover:underline visited:text-purple-700 focus:underline font-semibold"
+                  // Adjusted font size, color, and font weight for GitHub link
+                >
+                  GitHub
+                </a>
+              </span>
+            </div>
           )}
         </h1>
-        <h2 className="text-gray-700 text-2xl mt-7 ">JOB DASHBOARD</h2>
+        <h2 className="text-gray-700 text-2xl mt-7">JOB DASHBOARD</h2>
       </header>
 
       <div className="bg-white border p-3 rounded-lg shadow-lg">
