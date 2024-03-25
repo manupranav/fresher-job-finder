@@ -171,7 +171,7 @@ const scrapeJobData = async () => {
     };
 
     const convertJobList = (jobList) => {
-      const excludedCompaniesRegex = /galtech|altos|idatalytics/i; // i flag for case-insensitive matching
+      const excludedCompaniesRegex = /galtech|altos|idatalytics|mashuptech/i; // i flag for case-insensitive matching
       return jobList
         .filter((job) => !excludedCompaniesRegex.test(job.companyName))
         .map((job) => ({
