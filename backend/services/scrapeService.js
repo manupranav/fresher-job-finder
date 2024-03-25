@@ -63,7 +63,7 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
           .get()
           .filter(Boolean)
       );
-    } else {
+    } else if (techPark === "Technopark") {
       if (response.data && response.data.last_page) {
         const totalPages = response.data.last_page;
         const pageRequests = Array.from({ length: totalPages }, (_, i) =>
@@ -91,8 +91,56 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
             }))
         );
       }
-    }
+    } else {
+      try {
+        const response = await axios.get(sourceUrl, {
+          params: { action: "get_listings" },
+        });
 
+        if (response.data && response.data.found_jobs) {
+          const html = response.data.html;
+
+          const $ = cheerio.load(html);
+          jobList.push(
+            ...$(".job_listing")
+              .map((index, element) => {
+                const companyName = $(element)
+                  .find(".company strong")
+                  .text()
+                  .trim();
+                const jobRole = $(element).find(".position h3").text().trim();
+                const datePosted = $(element)
+                  .find(".date time")
+                  .attr("datetime");
+                const jobLink = $(element).find(".job-listing").text().trim();
+
+                const deadline = new Date(datePosted);
+                deadline.setDate(deadline.getDate() + 30);
+
+                const isMatchingJob = fresherKeywords.some((keyword) =>
+                  jobRole.toLowerCase().includes(keyword.toLowerCase())
+                );
+
+                if (isMatchingJob) {
+                  return {
+                    companyName,
+                    jobRole,
+                    jobLink,
+                    deadline,
+                    techPark,
+                  };
+                } else {
+                  return null; // Skip this job if it doesn't match fresher keywords
+                }
+              })
+              .get()
+              .filter(Boolean)
+          );
+        }
+      } catch (error) {
+        console.error("Error scraping job data from cyber park:", error);
+      }
+    }
     return jobList;
   } catch (error) {
     throw error;
@@ -101,16 +149,21 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
 
 const scrapeJobData = async () => {
   try {
-    const [jobListTechnopark, jobListInfopark] = await Promise.all([
-      scrapeJobsFromSource(
-        "https://technopark.org/api/paginated-jobs",
-        "Technopark"
-      ),
-      scrapeJobsFromSource(
-        "https://infopark.in/companies/job-search",
-        "Infopark"
-      ),
-    ]);
+    const [jobListTechnopark, jobListInfopark, jobListCyberpark] =
+      await Promise.all([
+        scrapeJobsFromSource(
+          "https://technopark.org/api/paginated-jobs",
+          "Technopark"
+        ),
+        scrapeJobsFromSource(
+          "https://infopark.in/companies/job-search",
+          "Infopark"
+        ),
+        scrapeJobsFromSource(
+          "https://www.cyberparkkerala.org/jm-ajax/get_listings/",
+          "Cyberpark"
+        ),
+      ]);
 
     const convertToDDMMYYYY = (date) => {
       const options = { day: "2-digit", month: "2-digit", year: "numeric" };
@@ -118,8 +171,9 @@ const scrapeJobData = async () => {
     };
 
     const convertJobList = (jobList) => {
+      const excludedCompaniesRegex = /galtech|altos|idatalytics/i; // i flag for case-insensitive matching
       return jobList
-        .filter((job) => !job.companyName.toLowerCase().includes("galtech"))
+        .filter((job) => !excludedCompaniesRegex.test(job.companyName))
         .map((job) => ({
           ...job,
           deadline: convertToDDMMYYYY(job.deadline),
@@ -129,9 +183,9 @@ const scrapeJobData = async () => {
     const jobList = [
       ...convertJobList(jobListTechnopark),
       ...convertJobList(jobListInfopark),
+      ...convertJobList(jobListCyberpark),
     ];
-
-    return jobList;
+    console.log(jobListCyberpark);
   } catch (error) {
     console.error("Error scraping job data:", error);
     return [];
