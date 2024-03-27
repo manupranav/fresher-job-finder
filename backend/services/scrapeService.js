@@ -149,21 +149,16 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
 
 const scrapeJobData = async () => {
   try {
-    const [jobListTechnopark, jobListInfopark, jobListCyberpark] =
-      await Promise.all([
-        scrapeJobsFromSource(
-          "https://technopark.org/api/paginated-jobs",
-          "Technopark"
-        ),
-        scrapeJobsFromSource(
-          "https://infopark.in/companies/job-search",
-          "Infopark"
-        ),
-        scrapeJobsFromSource(
-          "https://www.cyberparkkerala.org/jm-ajax/get_listings/",
-          "Cyberpark"
-        ),
-      ]);
+    const [jobListTechnopark, jobListInfopark] = await Promise.all([
+      scrapeJobsFromSource(
+        "https://technopark.org/api/paginated-jobs",
+        "Technopark"
+      ),
+      scrapeJobsFromSource(
+        "https://infopark.in/companies/job-search",
+        "Infopark"
+      ),
+    ]);
 
     const convertToDDMMYYYY = (date) => {
       const options = { day: "2-digit", month: "2-digit", year: "numeric" };
@@ -171,7 +166,7 @@ const scrapeJobData = async () => {
     };
 
     const convertJobList = (jobList) => {
-      const excludedCompaniesRegex = /galtech|altos|idatalytics|mashuptech/i; // i flag for case-insensitive matching
+      const excludedCompaniesRegex = /(galtech|altos|idatalytics|mashuptech)/i;
       return jobList
         .filter((job) => !excludedCompaniesRegex.test(job.companyName))
         .map((job) => ({
@@ -183,9 +178,8 @@ const scrapeJobData = async () => {
     const jobList = [
       ...convertJobList(jobListTechnopark),
       ...convertJobList(jobListInfopark),
-      ...convertJobList(jobListCyberpark),
     ];
-    console.log(jobListCyberpark);
+    return jobList;
   } catch (error) {
     console.error("Error scraping job data:", error);
     return [];
