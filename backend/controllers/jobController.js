@@ -123,6 +123,11 @@ const setJobsInternal = asyncHandler(async () => {
 
     const jobsFromScrape = await scrapeJobData();
 
+    if (!jobsFromScrape || jobsFromScrape.length === 0) {
+      console.log("No jobs scraped or empty array returned.");
+      return; // Return early if no jobs are scraped or the array is empty
+    }
+
     // Limit the number of jobs initially
     const maxJobsToProcess = 100;
     const limitedJobs = jobsFromScrape.slice(0, maxJobsToProcess);
