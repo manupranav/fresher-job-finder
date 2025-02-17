@@ -35,27 +35,17 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
 
     if (techPark === "Infopark") {
       jobList.push(
-        ...$(".company-list.joblist")
+        ...$("#job-list tbody tr")
           .map((index, element) => {
-            const companyName = $(element)
-              .find(".jobs-comp-name a")
-              .text()
-              .trim();
-            const jobRole = $(element)
-              .find(".mt5 a")
-              .first()
-              .clone()
-              .children()
-              .remove()
-              .end()
-              .text();
-            const deadline = $(element).find(".job-date").text().trim();
-            const jobLink = $(element).find(".mt5 a").attr("href");
-
+            const jobRole = $(element).find("td.head").text().trim();
+            const companyName = $(element).find("td.date").text().trim();
+            const deadline = $(element).find("td:nth-child(3)").text().trim();
+            const jobLink = $(element).find("td.btn-sec a").attr("href");
+    
             const isMatchingJob = fresherKeywords.some((keyword) =>
               jobRole.toLowerCase().includes(keyword.toLowerCase())
             );
-
+    
             return isMatchingJob
               ? { companyName, jobRole, deadline, jobLink, techPark }
               : null;
