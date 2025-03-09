@@ -15,7 +15,9 @@ const corsOptions = {
   origin: [
     "http://localhost:8082",
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "https://freshers-jobfinder.netlify.app",
+    "https://fresher-job-finder.vercel.app",
   ], // Update  React app's URL
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
