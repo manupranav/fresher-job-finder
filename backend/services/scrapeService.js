@@ -24,6 +24,7 @@ const fresherKeywords = [
   "6 month",
   "entry level",
 ];
+
 const scrapeJobsFromSource = async (sourceUrl, techPark) => {
   try {
     const response = await axios.get(sourceUrl, {
@@ -31,29 +32,69 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
     });
 
     const jobList = [];
-    const $ = cheerio.load(response.data);
 
+    // Handle Infopark by scraping all pages
     if (techPark === "Infopark") {
-      jobList.push(
-        ...$("#job-list tbody tr")
+      // Load the first page to determine the total number of pages
+      let $ = cheerio.load(response.data);
+
+      // Find pagination links (the <a> tags within the <ul class="pagination">)
+      const paginationLinks = $("ul.pagination li.page-item a");
+
+      let totalPages = 1;
+      if (paginationLinks.length > 0) {
+        // Extract the page numbers, filter out non-numeric values, and get the maximum
+        totalPages = Math.max(
+          ...paginationLinks
+            .map((i, el) => parseInt($(el).text().trim()))
+            .get()
+            .filter((num) => !isNaN(num))
+        );
+      }
+
+      // Build the list of page URLs
+      const pageUrls = [];
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1) {
+          pageUrls.push(sourceUrl);
+        } else {
+          pageUrls.push(`${sourceUrl}?page=${i}`);
+        }
+      }
+
+      // Request all pages in parallel
+      const pageRequests = pageUrls.map((url) =>
+        axios.get(url, {
+          httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        })
+      );
+      const pageResponses = await Promise.all(pageRequests);
+
+      // Process each page's content
+      pageResponses.forEach((pageResponse) => {
+        const $$ = cheerio.load(pageResponse.data);
+        const jobs = $$("#job-list tbody tr")
           .map((index, element) => {
-            const jobRole = $(element).find("td.head").text().trim();
-            const companyName = $(element).find("td.date").text().trim();
-            const deadline = $(element).find("td:nth-child(3)").text().trim();
-            const jobLink = $(element).find("td.btn-sec a").attr("href");
-    
+            const jobRole = $$(element).find("td.head").text().trim();
+            const companyName = $$(element).find("td.date").text().trim();
+            const deadline = $$(element).find("td:nth-child(3)").text().trim();
+            const jobLink = $$(element).find("td.btn-sec a").attr("href");
+
             const isMatchingJob = fresherKeywords.some((keyword) =>
               jobRole.toLowerCase().includes(keyword.toLowerCase())
             );
-    
+
             return isMatchingJob
               ? { companyName, jobRole, deadline, jobLink, techPark }
               : null;
           })
           .get()
-          .filter(Boolean)
-      );
+          .filter(Boolean);
+
+        jobList.push(...jobs);
+      });
     } else if (techPark === "Technopark") {
+      // Existing Technopark code...
       if (response.data && response.data.last_page) {
         const totalPages = response.data.last_page;
         const pageRequests = Array.from({ length: totalPages }, (_, i) =>
@@ -82,6 +123,7 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
         );
       }
     } else {
+      // Fallback scraping for other tech parks
       try {
         const response = await axios.get(sourceUrl, {
           params: { action: "get_listings" },
@@ -89,7 +131,6 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
 
         if (response.data && response.data.found_jobs) {
           const html = response.data.html;
-
           const $ = cheerio.load(html);
           jobList.push(
             ...$(".job_listing")
@@ -120,7 +161,7 @@ const scrapeJobsFromSource = async (sourceUrl, techPark) => {
                     techPark,
                   };
                 } else {
-                  return null; // Skip this job if it doesn't match fresher keywords
+                  return null;
                 }
               })
               .get()
