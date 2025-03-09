@@ -23,9 +23,9 @@ function Login() {
   );
 
   useEffect(() => {
-    if (isError) {
-      toast.error(message);
-    }
+    // if (isError) {
+    //   toast.error(message);
+    // }
     if (isSuccess || user) {
       navigate("/");
     }
@@ -46,34 +46,30 @@ function Login() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (isFormIncomplete()) {
       toast.error("Please complete all fields");
     } else {
-      const userData = {
-        email,
-        password,
-      };
-
+      const userData = { email, password };
+  
       try {
-        // Dispatch the login action and unwrap the result
         const resultAction = await dispatch(login(userData));
         unwrapResult(resultAction);
-
-        // If successful, you can navigate or perform other actions
-        // For example, navigate("/");
+        navigate("/");
       } catch (error) {
-        // Handle the rejected action and display the error message
-        if (error?.response?.status === 404) {
+        
+        if (error.status === 404) {
           toast.error("No account found with this email. Please register.");
-        } else if (error?.response?.status === 401) {
-          toast.error("Incorrect password. Please try again.");
+        } else if (error.status === 401) {
+          toast.error("Incorrect password. Please try again or sign up.");
         } else {
           toast.error("An error occurred during login");
         }
       }
     }
   };
+  
+  
 
   if (isLoading) {
     return <Spinner />;
