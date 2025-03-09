@@ -64,8 +64,10 @@ function Login() {
         // For example, navigate("/");
       } catch (error) {
         // Handle the rejected action and display the error message
-        if (error && error.response && error.response.status === 400) {
-          toast.error("Invalid email or password");
+        if (error?.response?.status === 404) {
+          toast.error("No account found with this email. Please register.");
+        } else if (error?.response?.status === 401) {
+          toast.error("Incorrect password. Please try again.");
         } else {
           toast.error("An error occurred during login");
         }
