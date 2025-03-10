@@ -25,7 +25,11 @@ function Register() {
 
   useEffect(() => {
     if (isError) {
-      toast.error(message);
+      if (message === "Request failed with status code 400") {
+        toast.error("Email already exists. Please try again with a new email.");
+      } else {
+        toast.error(message);
+      }
     }
     if (isSuccess) {
       navigate("/");

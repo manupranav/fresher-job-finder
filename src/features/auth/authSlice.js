@@ -23,7 +23,8 @@ export const register = createAsyncThunk(
           error.response.data.message) ||
         error.message ||
         error.toString();
-      return thunkAPI.rejectWithValue(message);
+        const status = error.response ? error.response.status : null;
+        return thunkAPI.rejectWithValue({ message, status });
     }
   }
 );
@@ -70,8 +71,8 @@ export const authSlice = createSlice({
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = true;
-        state.message = action.payload;
+        state.isError = true;
+        state.message = action.payload.message;
         state.user = null;
       })
 
